@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Further Study</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+    rel="stylesheet" 
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+    crossorigin="anonymous"><!--bootstrap'css-->
+<link rel="stylesheet" href="furtherStudy.css">
+<!-- <style>
+* {
+    outline: 1px solid red !important;
+}    
+</style> -->
+</head>
+<body>
+<div class="container-fluid text-center">
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-danger">GOTTA CATCH EM ALL</button>
+            <div id="pokemon-area"></div>
+        </div>
+    </div>
+</div>
+<!--load jQuery, Axios before your custom JavaScript code--------------------------------------------------------->
+<script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<!---------------------------------------------------------------------------------------------------------------->
+<script>
+/*
+//1.Use async-await
+$(function() {
+    async function F() {//make a request to get names,URLs for every pokemon in database
+      let data = await $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+      console.log(data)
+    }
+    F()//{count: 1302, next: 'https://pokeapi.co/api/v2/pokemon/?offset=1000&limit=302', previous: null, results: Array(1000)}
+
+    async function G(){//pick random 2 & make requests to their URLs.Console.log their data
+        let data = await $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        let randomPokemonUrls = []
+        for (let i = 0;i<=2; i++) {
+            let randomIdx = Math.floor(Math.random() * data.results.length)
+            randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+        }
+        let pokemonData = await Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        pokemonData.forEach(p => console.log(p))
+        }
+    G()
+
+    async function H() {
+        let allData = await $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        let randomPokemonUrls = []
+        for (let i = 0; i <=2; i++) {
+            let randomIdx = Math.floor(Math.random() * allData.results.length)
+            let url = allData.results.splice(randomIdx, 1)[0].url
+            randomPokemonUrls.push(url)
+        }
+        let pokemonData = await Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        let speciesData = await Promise.all(pokemonData.map(p => $.getJSON(p.species.url)))
+        descriptions = speciesData.map(d => {
+            let descriptionObj = d.flavor_text_entries.find(entry => entry.language.name === "en")
+            return descriptionObj ? descriptionObj.flavor_text
+                                  : "No description available"
+        })
+        descriptions.forEach((desc, i) =>console.log(`${pokemonData[i].name}: ${desc}`))
+    }
+    H()
+
+    let $btn = $("button")
+    let $pokeArea = $("#pokemon-area")  
+    $btn.on("click", async function() {//Build HTML page to generate data from 3 randomly chosen pokemon
+        $pokeArea.empty()
+        let allData = await $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        let randomPokemonUrls = []
+        for (let i = 0; i < 3; i++) {
+            let randomIdx = Math.floor(Math.random() * allData.results.length)
+            randomPokemonUrls.push(allData.results.splice(randomIdx, 1)[0].url)
+        }
+        let pokemonData = await Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        let speciesData = await Promise.all(pokemonData.map(p => $.getJSON(p.species.url)))
+        speciesData.forEach((d, i) => {
+            let descriptionObj = d.flavor_text_entries.find(entry=>entry.language.name === "en")
+            let description = descriptionObj ? descriptionObj.flavor_text : ""
+            let name = pokemonData[i].name
+            let imgSrc = pokemonData[i].sprites.front_default
+            $pokeArea.append(makePokeCard(name, imgSrc, description))
+        })
+    })  
+    function makePokeCard(name, imgSrc, description) {
+        return `
+            <div class="card">
+                <h1>${name}</h1>
+                <img src=${imgSrc} />
+                <p>${description}</p>
+            </div>
+        `
+    }
+})
+
+//2.Use callbacks
+$(function() {
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`,data=>console.log(data))
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`,data=>{
+        let randomPokemonUrls = []
+        for (let i = 0; i < 3; i++) {
+            let randomIdx = Math.floor(Math.random() * data.results.length)
+            randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+        }
+        randomPokemonUrls.forEach(url=>$.getJSON(url,data=>console.log(data)))
+    })
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`,data=>{
+        let randomPokemonUrls = []
+        for (let i = 0; i < 3; i++) {
+            let randomIdx = Math.floor(Math.random() * data.results.length)
+            let url = data.results.splice(randomIdx, 1)[0].url
+            randomPokemonUrls.push(url)
+        }
+        randomPokemonUrls.forEach(url=>{
+            $.getJSON(url,data=>{
+                let name = data.name
+                $.getJSON(data.species.url,data=>{
+                    let descriptionObj = data.flavor_text_entries.find(entry => entry.language.name=="en")
+                    let description = descriptionObj ? descriptionObj.flavor_text
+                                                     : "No description available"
+                    console.log(`${name}: ${description}`)
+                })
+            })
+        })
+    })
+
+    let $btn = $("button")
+    let $pokeArea = $("#pokemon-area")  
+    $btn.on("click",()=>{
+        $pokeArea.empty()
+        $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`,data=>{
+            let randomPokemonUrls = []
+            for (let i = 0; i < 3; i++) {
+                let randomIdx = Math.floor(Math.random() * data.results.length)
+                randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+            }
+            randomPokemonUrls.forEach((url, i)=>{
+                $.getJSON(url,data=>{
+                    let name = data.name
+                    let imgSrc = data.sprites.front_default
+                    $.getJSON(data.species.url,data=>{
+                        let descriptionObj = data.flavor_text_entries.find(entry => entry.language.name === "en")
+                        let description = descriptionObj ? descriptionObj.flavor_text
+                                                        : "No description available"
+                        $pokeArea.append(makePokeCard(name, imgSrc, description))
+                    })
+                })
+            })
+        })
+    })  
+    function makePokeCard(name, imgSrc, description) {
+        return `
+            <div class="card">
+                <h1>${name}</h1>
+                <img src=${imgSrc} />
+                <p>${description}</p>
+            </div>
+        `
+    }
+})
+*/
+//3.use Promises
+$(function() {
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`).then(data =>console.log(data))
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        .then(data => {
+            let randomPokemonUrls = []
+            for (let i = 0; i < 3; i++) {
+                let randomIdx = Math.floor(Math.random() * data.results.length)
+                randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+            }
+            return Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        })
+        .then(pokemon =>pokemon.forEach(p => console.log(p)))
+
+    let names = null
+    $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        .then(data => {
+            let randomPokemonUrls = []
+            for (let i = 0; i < 3; i++) {
+                let randomIdx = Math.floor(Math.random() * data.results.length)
+                randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+            }
+            return Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        })
+        .then(data => {
+            names = data.map(d => d.name)
+            return Promise.all(data.map(d => $.getJSON(d.species.url)))
+        })
+        .then(data => {
+            let descriptions = data.map(d => {
+                let descriptionObj = d.flavor_text_entries.find(entry => entry.language.name === "en")
+                return descriptionObj ? descriptionObj.flavor_text 
+                                      : "No description available"
+            })
+            descriptions.forEach((desc, i) =>console.log(`${names[i]}: ${desc}`))
+        })
+      
+    let $btn = $("button")
+    let $pokeArea = $("#pokemon-area")  
+    $btn.on("click",()=>{
+        $pokeArea.empty()
+        let namesAndImages = []
+        $.getJSON(`https://pokeapi.co/api/v2/pokemon/?limit=1000`)
+        .then(data => {
+            let randomPokemonUrls = []
+            for (let i = 0; i < 3; i++) {
+                let randomIdx = Math.floor(Math.random() * data.results.length)
+                randomPokemonUrls.push(data.results.splice(randomIdx, 1)[0].url)
+            }
+            return Promise.all(randomPokemonUrls.map(url => $.getJSON(url)))
+        })
+        .then(pokemonData => {
+            namesAndImages = pokemonData.map(p=>({name: p.name,imgSrc: p.sprites.front_default}))
+            return Promise.all(pokemonData.map(p => $.getJSON(p.species.url)))
+        })
+        .then(speciesData => {
+            speciesData.forEach((d, i) => {
+                let descriptionObj = d.flavor_text_entries.find(entry=>entry.language.name === "en")
+                let description = descriptionObj ? descriptionObj.flavor_text : ""
+                let { name, imgSrc } = namesAndImages[i]
+                $pokeArea.append(makePokeCard(name, imgSrc, description))
+            })
+        })
+    })
+  
+    function makePokeCard(name, imgSrc, description) {
+      return `
+        <div class="card">
+          <h1>${name}</h1>
+          <img src=${imgSrc} />
+          <p>${description}</p>
+        </div>
+      `
+    }
+})
+  
+</script>
+
+<!--bootstrap's JS bundle (including Popper for positioning dropdowns,poppers,tooltips---------------------------->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
+</script>
+</body>
+</html>
